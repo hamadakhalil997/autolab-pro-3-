@@ -1382,7 +1382,7 @@ export default function App() {
 
   const handleClearDtc = async (idx: number) => {
     const code = dtcs[idx]?.code;
-    await dispatchUdsCommand({
+    const res = await dispatchUdsCommand({
       txId: dtcs[idx]?.nodeId ?? '0x7E0',
       payload: '14 FF FF FF',
       demoBenchMode,
@@ -1391,16 +1391,21 @@ export default function App() {
       securitySeed,
       dtcs,
     });
+    if (!res.ok) {
+      pushToast(`DTC ${code} was not cleared: ${res.note}`, 'Diagnostics', 'err');
+      return;
+    }
     setDtcs((prev) => prev.filter((_, i) => i !== idx));
     if (code === 'B1193') setEdrCleared(true);
-    pushToast(`Cleared DTC ${code}`, 'Diagnostics', 'ok');
+    pushToast(`ECU confirmed clear request for DTC ${code}`, 'Diagnostics', 'ok');
   };
 
   const handleClearAllDtcs = async () => {
+    let cleared = false;
     if (webSerialDriver.isOpen) {
-      await webSerialDriver.clearDtcs();
+      cleared = await webSerialDriver.clearDtcs();
     } else {
-      await dispatchUdsCommand({
+      const res = await dispatchUdsCommand({
         txId: '0x7E0',
         payload: '14 FF FF FF',
         demoBenchMode,
@@ -1409,10 +1414,15 @@ export default function App() {
         securitySeed,
         dtcs,
       });
+      cleared = res.ok;
+    }
+    if (!cleared) {
+      pushToast('ECU did not confirm DTC clearing. Stored faults were not changed in the display.', 'Diagnostics', 'err');
+      return;
     }
     setDtcs([]);
-    setEdrCleared(true);
-    pushToast('All DTCs cleared — 0 recurring faults verified', 'Diagnostics', 'ok');
+    setEdrCleared(false);
+    pushToast('ECU confirmed the DTC clear command. Rescan to verify remaining faults.', 'Diagnostics', 'ok');
   };
 
   // Functions & Coding Actions (Persisted + Real UDS Dispatch)
@@ -1431,7 +1441,7 @@ export default function App() {
   };
 
   const handleWriteCoding = async (nextCoding: CodingConfigState) => {
-    await dispatchUdsCommand({
+    const res = await dispatchUdsCommand({
       txId: '0x740',
       payload: '2E F1 A2 01 02 03',
       demoBenchMode,
@@ -1440,6 +1450,10 @@ export default function App() {
       securitySeed,
       dtcs,
     });
+    if (!res.ok) {
+      pushToast(`Coding not written: ${res.note}`, 'Coding', 'err');
+      return;
+    }
     const entry = `[${new Date().toLocaleTimeString()}] VIN=${vehicle.vin.slice(-6)} | Region=${nextCoding.region} | Trans=${nextCoding.trans} | Light=${nextCoding.light}`;
     setCodingConfig(nextCoding);
     setCodingAuditLogs((prev) => [entry, ...prev]);
@@ -1448,7 +1462,7 @@ export default function App() {
   };
 
   const handleSyncModuleVin = async () => {
-    await dispatchUdsCommand({
+    const res = await dispatchUdsCommand({
       txId: '0x7E0',
       payload: '2E F1 90',
       demoBenchMode,
@@ -1457,7 +1471,7 @@ export default function App() {
       securitySeed,
       dtcs,
     });
-    pushToast(`VIN (${vehicle.vin}) & ISN synchronized to replacement module`, 'Coding', 'ok');
+    pushToast(res.ok ? `ECU acknowledged VIN write request for ${vehicle.vin}` : `VIN write not confirmed: ${res.note}`, 'Coding', res.ok ? 'ok' : 'err');
   };
 
   const handleClearCrashEdr = async () => {
@@ -1486,7 +1500,7 @@ export default function App() {
 
   const handleTcuFlashSport = async () => {
     const next = !tcuSportMode;
-    await dispatchUdsCommand({
+    const res = await dispatchUdsCommand({
       txId: '0x7E1',
       payload: next ? '2E 02 10 01' : '2E 02 10 00',
       demoBenchMode,
@@ -1495,6 +1509,10 @@ export default function App() {
       securitySeed,
       dtcs,
     });
+    if (!res.ok) {
+      pushToast(`TCU write not confirmed: ${res.note}`, 'TCU', 'err');
+      return;
+    }
     setTcuSportMode(next);
     void persistWorkspaceSettings({ tcuSportMode: next });
     pushToast(
