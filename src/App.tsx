@@ -160,6 +160,33 @@ export default function App() {
 
   const ecuOnline = vciConnected && ecuSession === 'SESSION_ACTIVE' && ignition !== 'OFF';
 
+  // Electron desktop host detection. This is application readiness only;
+  // it must never be interpreted as a connected VCI or ECU.
+  useEffect(() => {
+    const desktopApi = window.autoLabDesktop;
+    if (!desktopApi) return;
+    void desktopApi.getRuntimeInfo().then((runtime) => {
+      setHardwareLink((prev) => ({
+        ...prev,
+        transport: 'none',
+        statusLabel: runtime.vciSdkReady
+          ? 'WINDOWS NATIVE HOST READY'
+          : 'WINDOWS DESKTOP · VCI SDK PENDING',
+        lastMessage: runtime.vciSdkReady
+          ? 'Native Windows host is ready. No ECU session has been confirmed.'
+          : 'AutoLab Pro desktop host is running. The Autocom/VCI vendor SDK is not integrated yet.',
+      }));
+    }).catch(() => {
+      setHardwareLink((prev) => ({
+        ...prev,
+        transport: 'none',
+        statusLabel: 'DESKTOP HOST STATUS UNKNOWN',
+        lastMessage: 'Could not read native desktop host status.',
+      }));
+    });
+  }, []);
+
+
   // Live Telemetry
   const [targetIdle, setTargetIdle] = useState(735);
   const [rpm, setRpm] = useState(0);

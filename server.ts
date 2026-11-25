@@ -1,12 +1,9 @@
 import express from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const DATA_DIR = path.resolve(__dirname, '.autolab_data');
+const APP_ROOT = process.env.AUTOLAB_APP_ROOT ?? process.cwd();
+const DATA_DIR = process.env.AUTOLAB_DATA_DIR ?? path.resolve(APP_ROOT, '.autolab_data');
 const WORKSPACE_FILE = path.join(DATA_DIR, 'workspace.json');
 
 interface PersistedSettings {
@@ -368,16 +365,17 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distDir = path.resolve(__dirname, 'dist');
+    const distDir = path.resolve(APP_ROOT, 'dist');
     app.use(express.static(distDir));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distDir, 'index.html'));
     });
   }
 
-  const PORT = 3000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`AutoLab Pro server listening on http://0.0.0.0:${PORT} (Direct Hardware Mode)`);
+  const PORT = Number(process.env.PORT ?? 3000);
+  const HOST = process.env.HOST ?? '127.0.0.1';
+  app.listen(PORT, HOST, () => {
+    console.log(`AutoLab Pro server listening on http://${HOST}:${PORT} (Local Desktop Mode)`);
   });
 }
 

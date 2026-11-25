@@ -78,3 +78,74 @@
 .autolab-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(56, 152, 255, 0.55);
 }
+
+/* Premium desktop depth and restrained motion */
+.autolab-panel-frame,
+.autolab-glass-card {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition:
+    transform 260ms cubic-bezier(.2,.75,.25,1),
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    filter 260ms ease;
+}
+
+.autolab-glass-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.autolab-glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(118deg, transparent 18%, rgba(125, 211, 252, .075) 48%, transparent 72%);
+  transform: translateX(-115%);
+  transition: transform 700ms cubic-bezier(.2,.75,.25,1);
+}
+
+.autolab-glass-card:hover {
+  transform: perspective(1100px) translateY(-3px) rotateX(1deg);
+  border-color: rgba(103, 232, 249, .62);
+  box-shadow:
+    0 0 24px rgba(14, 165, 233, .16),
+    0 18px 38px rgba(0, 0, 0, .5),
+    inset 0 1px 0 rgba(186, 230, 253, .2);
+}
+
+.autolab-glass-card:hover::before {
+  transform: translateX(115%);
+}
+
+.autolab-cyan-glow {
+  animation: autolab-signal-pulse 3.2s ease-in-out infinite;
+}
+
+.autolab-grid-overlay {
+  animation: autolab-grid-drift 32s linear infinite;
+}
+
+@keyframes autolab-signal-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(56, 189, 248, .45)); }
+  50% { filter: drop-shadow(0 0 13px rgba(56, 189, 248, .9)); }
+}
+
+@keyframes autolab-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 40px 40px, 40px 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
