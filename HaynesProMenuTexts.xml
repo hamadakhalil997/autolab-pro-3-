@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextDatabase defaultLangId="4">
+  <Mappings>
+    <Mapping culture="sv" langId="1" comment="swedish" />
+    <Mapping culture="nb" langId="2" comment="Norwegian (Bokmål)" />
+    <Mapping culture="nn" langId="2" comment="Norwegian (Nynorsk)" />
+    <Mapping culture="fi" langId="3" comment="Finnish" />
+    <Mapping culture="en" langId="4" comment="English" />
+    <Mapping culture="fr" langId="5" comment="French" />
+    <Mapping culture="de" langId="6" comment="German" />
+    <Mapping culture="nl" langId="7" comment="Dutch" />
+    <Mapping culture="es" langId="8" comment="Spanish" />
+    <Mapping culture="it" langId="9" comment="Italian" />
+    <Mapping culture="el" langId="10" comment="Greek" />
+    <Mapping culture="ru" langId="11" comment="Russian" />
+    <Mapping culture="pl" langId="12" comment="Polish" />
+    <Mapping culture="pt" langId="13" comment="Portugese" />
+    <Mapping culture="hu" langId="14" comment="Hungarian" />
+    <Mapping culture="da" langId="18" comment="Danish" />
+    <Mapping culture="hr" langId="19" comment="Croatian" />
+    <Mapping culture="cs" langId="20" comment="Czech" />
+    <Mapping culture="ro" langId="21" comment="Romanian" />
+    <Mapping culture="tr" langId="22" comment="Turkish" />
+    <Mapping culture="sr-Latn-CS" langId="24" comment="Serbian (Latin)" />
+    <Mapping culture="bg" langId="25" comment="Bulgarian" />
+  </Mappings>
+  <Languages>
+    <Language id="1">
+      <Translations>
+        <Translation textId="1" value="Identifiering" />
+        <Translation textId="2" value="Underhåll" />
+        <Translation textId="3" value="Tekniska Data" />
+        <Translation textId="4" value="Smörjmedel och vätskor" />
+        <Translation textId="5" value="Återkallelser" />
+        <Translation textId="6" value="Reparationshandböcker" />
+        <Translation textId="7" value="Säkringar och reläer" />
+        <Translation textId="8" value="Tekniska ritningar" />
+        <Translation textId="9" value="Teknisk Service Bulletin" />
+        <Translation textId="10" value="Tips och fixar" />
+        <Translation textId="11" value="Hem" />
+        <Translation textId="12" value="Elektronik" />
+        <Translation textId="13" value="Reparationstider" />
+      </Translations>
+    </Language>
+    <Language id="2">
+      <Translations>
+        <Translation textId="1" value="Identifikasjon" />
+        <Translation textId="2" value="Vedlikehold" />
+        <Translation textId="3" value="Justeringsdata" />
+        <Translation textId="4" value="Smøremidler og Oljer" />
+        <Translation textId="5" value="Tilbakekallinger" />
+        <Translation textId="6" value="Reparasjonshåndbøker" />
+        <Translation textId="7" value="Sikringer og reléer" />
+        <Translation textId="8" value="Tekniske tegninger" />
+        <Translation textId="9" value="Technical Service Bulletin" />
+        <Translation textId="10" value="Tips og fikser" />
+        <Translation textId="11" value="Hjem" />
+        <Translation textId="12" value="Elektronikk" />
+        <Translation textId="13" value="Reparasjonstider" />
+      </Translations>
+    </Language>
+    <Language id="3">
+      <Translations>
+        <Translation textId="1" value="Tunnistaminen" />
+        <Translation textId="2" value="Huolto" />
+        <Translation textId="3" value="Säätötiedot" />
+        <Translation textId="4" value="Voiteluaineet ja nesteet" />
+        <Translation textId="5" value="Takaisinkutsut" />
+        <Translation textId="6" value="Korjausoppaat" />
+        <Translation textId="7" value="Sulakkeet ja releet" />
+        <Translation textId="8" value="Tekniset piirustukset" />
+        <Translation textId="9" value="Tekninen palvelu Bulletin" />
+        <Translation textId="10" value="Vinkkejä ja korjaukset" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektroniikka" />
+        <Translation textId="13" value="Korjausajat" />
+      </Translations>
+    </Language>
+    <Language id="4">
+      <Translations>
+        <Translation textId="1" value="Identification" />
+        <Translation textId="2" value="Maintenance" />
+        <Translation textId="3" value="Adjustment Data" />
+        <Translation textId="4" value="Lubricants and Fluids" />
+        <Translation textId="5" value="Recalls" />
+        <Translation textId="6" value="Repair Manuals" />
+        <Translation textId="7" value="Fuses and relays" />
+        <Translation textId="8" value="Technical drawings" />
+        <Translation textId="9" value="Technical Service Bulletin" />
+        <Translation textId="10" value="Tips and fixes" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electronics" />
+        <Translation textId="13" value="Repair Times" />
+      </Translations>
+    </Language>
+    <Language id="5">
+      <Translations>
+        <Translation textId="1" value="Identification" />
+        <Translation textId="2" value="Entretien" />
+        <Translation textId="3" value="Données de réglage" />
+        <Translation textId="4" value="Lubrifiants et liquides" />
+        <Translation textId="5" value="Rappels" />
+        <Translation textId="6" value="Manuels de réparation" />
+        <Translation textId="7" value="Fusibles et les relais" />
+        <Translation textId="8" value="Dessins techniques" />
+        <Translation textId="9" value="Bulletin de service technique" />
+        <Translation textId="10" value="Conseils et correctifs" />
+        <Translation textId="11" value="Accueil" />
+        <Translation textId="12" value="Electronique" />
+        <Translation textId="13" value="Temps barémés" />
+      </Translations>
+    </Language>
+    <Language id="6">
+      <Translations>
+        <Translation textId="1" value="Identifizierung" />
+        <Translation textId="2" value="Wartung" />
+        <Translation textId="3" value="Einstelldaten" />
+        <Translation textId="4" value="Schmiermittel und Flüssigkeiten" />
+        <Translation textId="5" value="Rückrufe" />
+        <Translation textId="6" value="Reparaturhandbücher" />
+        <Translation textId="7" value="Sicherungen und Relais" />
+        <Translation textId="8" value="Technische Zeichnungen" />
+        <Translation textId="9" value="Technical Service Bulletin" />
+        <Translation textId="10" value="Tipps und Fehlerbehebungen" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electronik" />
+        <Translation textId="13" value="Arbeitswerte" />
+      </Translations>
+    </Language>
+    <Language id="7">
+      <Translations>
+        <Translation textId="1" value="Identificatie" />
+        <Translation textId="2" value="Onderhoud" />
+        <Translation textId="3" value="Afstelgegevens" />
+        <Translation textId="4" value="Smeermiddelen en vloeistoffen" />
+        <Translation textId="5" value="Terugroepacties" />
+        <Translation textId="6" value="Reparatiehandleidingen" />
+        <Translation textId="7" value="Zekeringen en relais" />
+        <Translation textId="8" value="Technische tekeningen" />
+        <Translation textId="9" value="Technical Service Bulletin" />
+        <Translation textId="10" value="Tips en oplossingen" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektronica" />
+        <Translation textId="13" value="Reparatietijden" />
+      </Translations>
+    </Language>
+    <Language id="8">
+      <Translations>
+        <Translation textId="1" value="Identificación" />
+        <Translation textId="2" value="Mantenimiento" />
+        <Translation textId="3" value="Datos de ajuste" />
+        <Translation textId="4" value="Lubricantes y fluidos" />
+        <Translation textId="5" value="Campañas" />
+        <Translation textId="6" value="Manuales de reparación" />
+        <Translation textId="7" value="Fusibles y relés" />
+        <Translation textId="8" value="Planos técnicos" />
+        <Translation textId="9" value="Boletín de Servicio Técnico" />
+        <Translation textId="10" value="Consejos y soluciones" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electrónica" />
+        <Translation textId="13" value="Tiempos de reparación" />
+      </Translations>
+    </Language>
+    <Language id="9">
+      <Translations>
+        <Translation textId="1" value="Identificazione" />
+        <Translation textId="2" value="Manutenzione" />
+        <Translation textId="3" value="Dati di regolazione" />
+        <Translation textId="4" value="Lubrificanti e fluidi" />
+        <Translation textId="5" value="Richiami" />
+        <Translation textId="6" value="Manuali di riparazione" />
+        <Translation textId="7" value="Fusibili e relè" />
+        <Translation textId="8" value="Disegni tecnici" />
+        <Translation textId="9" value="Servizio Tecnico Bollettino" />
+        <Translation textId="10" value="Consejos y soluciones" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elettronica" />
+        <Translation textId="13" value="Tempi di riparazione" />
+      </Translations>
+    </Language>
+    <Language id="10">
+      <Translations>
+        <Translation textId="1" value="αναγνώριση" />
+        <Translation textId="2" value="ΣΥΝΤΗΡΗΣΗ" />
+        <Translation textId="3" value="Στοιχεία ρύθμισης" />
+        <Translation textId="4" value="Λιπαντικά και υγρά" />
+        <Translation textId="5" value="Ανακλήσεις" />
+        <Translation textId="6" value="Εγχειρίδια επισκευής" />
+        <Translation textId="7" value="Ασφάλειες και ρελέ" />
+        <Translation textId="8" value="Τεχνικά σχέδια" />
+        <Translation textId="9" value="Τεχνικό Δελτίο" />
+        <Translation textId="10" value="Συμβουλές και διορθώσεις" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Ηλεκτρονικά" />
+        <Translation textId="13" value="Χρόνοι επισκευής" />
+      </Translations>
+    </Language>
+    <Language id="11">
+      <Translations>
+      </Translations>
+    </Language>
+    <Language id="12">
+      <Translations>
+        <Translation textId="1" value="Identyfikacja" />
+        <Translation textId="2" value="Obsługa techniczna" />
+        <Translation textId="3" value="Dane regulacyjne" />
+        <Translation textId="4" value="Smary i płyny" />
+        <Translation textId="5" value="Wycofania" />
+        <Translation textId="6" value="Instrukcje napraw" />
+        <Translation textId="7" value="Bezpieczniki i przekaźniki" />
+        <Translation textId="8" value="Rysunki techniczne" />
+        <Translation textId="9" value="Biuletyn usługi techniczne" />
+        <Translation textId="10" value="Porady i poprawki" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektronika" />
+        <Translation textId="13" value="Normy czasowe napraw" />
+      </Translations>
+    </Language>
+    <Language id="13">
+      <Translations>
+        <Translation textId="1" value="Identificação" />
+        <Translation textId="2" value="Manutenção" />
+        <Translation textId="3" value="Dados de ajuste" />
+        <Translation textId="4" value="Lubrificantes e fluidos" />
+        <Translation textId="5" value="Acções de recolha" />
+        <Translation textId="6" value="Manuais de reparação" />
+        <Translation textId="7" value="Fusíveis e relés" />
+        <Translation textId="8" value="Desenhos técnicos" />
+        <Translation textId="9" value="Boletim de Serviço Técnico" />
+        <Translation textId="10" value="Dicas e correções" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Sistema electrónico" />
+        <Translation textId="13" value="Normy czasowe napraw" />
+      </Translations>
+    </Language>
+    <Language id="14">
+      <Translations>
+        <Translation textId="1" value="Azonosítás" />
+        <Translation textId="2" value="Karbantartás" />
+        <Translation textId="3" value="Beállítási adatok" />
+        <Translation textId="4" value="Kenőanyagok és folyadékok" />
+        <Translation textId="5" value="Visszahívások" />
+        <Translation textId="6" value="Javítás kézikönyvek" />
+        <Translation textId="7" value="Biztosítékok és relék" />
+        <Translation textId="8" value="Műszaki rajzok" />
+        <Translation textId="9" value="Műszaki Service Bulletin" />
+        <Translation textId="10" value="Tippek és javítások" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektronika" />
+        <Translation textId="13" value="Javítási idők" />
+      </Translations>
+    </Language>
+    <Language id="18">
+      <Translations>
+        <Translation textId="1" value="Identifikation" />
+        <Translation textId="2" value="Vedligeholdelse" />
+        <Translation textId="3" value="Indstillingsdata" />
+        <Translation textId="4" value="Smøremidler og væsker" />
+        <Translation textId="5" value="Tilbagekaldelser" />
+        <Translation textId="6" value="Reparationsmanualer" />
+        <Translation textId="7" value="Sikringer og relæer" />
+        <Translation textId="8" value="Tekniske tegninger" />
+        <Translation textId="9" value="Teknisk service Bulletin" />
+        <Translation textId="10" value="Tips og rettelser" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electronics" />
+        <Translation textId="13" value="Repair Times" />
+      </Translations>
+    </Language>
+    <Language id="19">
+      <Translations>
+        <Translation textId="1" value="Identifikacija" />
+        <Translation textId="2" value="Održavanje" />
+        <Translation textId="3" value="Podaci o podešavanju" />
+        <Translation textId="4" value="Lubrikanti i tekućine" />
+        <Translation textId="5" value="Opozivi" />
+        <Translation textId="6" value="Priručnici za popravak " />
+        <Translation textId="7" value="Osigurači i releji" />
+        <Translation textId="8" value="Tehnički Nacrti" />
+        <Translation textId="9" value="Tehnička služba bilten" />
+        <Translation textId="10" value="Savjet popravci" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electronics" />
+        <Translation textId="13" value="Repair Times" />
+      </Translations>
+    </Language>
+    <Language id="20">
+      <Translations>
+        <Translation textId="1" value="Identifikace" />
+        <Translation textId="2" value="Údržba" />
+        <Translation textId="3" value="Data nastavení" />
+        <Translation textId="4" value="Maziva a kapaliny" />
+        <Translation textId="5" value="Svolávací akce" />
+        <Translation textId="6" value="Opravárenské servisní manuály" />
+        <Translation textId="7" value="Pojistky a relé" />
+        <Translation textId="8" value="Technické výkresy" />
+        <Translation textId="9" value="Servisní Bulletin Technická" />
+        <Translation textId="10" value="Tipy a opravy" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektronika" />
+        <Translation textId="13" value="Doby oprav" />
+      </Translations>
+    </Language>
+    <Language id="21">
+      <Translations>
+        <Translation textId="1" value="Identificare" />
+        <Translation textId="2" value="întreținere" />
+        <Translation textId="3" value="Date de reglare" />
+        <Translation textId="4" value="Lubrifianți și lichide" />
+        <Translation textId="5" value="Rechemări" />
+        <Translation textId="6" value="Manuale de reparaţii" />
+        <Translation textId="7" value="Siguranțe fuzibile și relee" />
+        <Translation textId="8" value="Scheme tehnice" />
+        <Translation textId="9" value="Serviciul tehnic Buletinul" />
+        <Translation textId="10" value="Sfaturi și stabilește" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Electronics" />
+        <Translation textId="13" value="Repair Times" />
+      </Translations>
+    </Language>
+    <Language id="22">
+      <Translations>
+        <Translation textId="1" value="Kimlik" />
+        <Translation textId="2" value="Bakım" />
+        <Translation textId="3" value="Ayarlama verisi" />
+        <Translation textId="4" value="Yağlar ve akışkanlar" />
+        <Translation textId="5" value="Hatırlatmalar" />
+        <Translation textId="6" value="Tamir Kılavuzları" />
+        <Translation textId="7" value="Sigortalar ve röleler" />
+        <Translation textId="8" value="Teknik çizimler" />
+        <Translation textId="9" value="Teknik Servis Bülteni" />
+        <Translation textId="10" value="Ipuçları ve düzeltmeler" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Elektronikler" />
+        <Translation textId="13" value="Onarım zamanları" />
+      </Translations>
+    </Language>
+    <Language id="23">
+      <Translations/>
+    </Language>
+    <Language id="24">
+      <Translations/>
+    </Language>
+    <Language id="25">
+      <Translations>
+        <Translation textId="1" value="Идентифициране" />
+        <Translation textId="2" value="поддръжка" />
+        <Translation textId="3" value="Данни За регулиране" />
+        <Translation textId="4" value="Смазочни масла и течности" />
+        <Translation textId="5" value="Изтегляния от пазара" />
+        <Translation textId="6" value="Наръчници за ремонт" />
+        <Translation textId="7" value="Предпазители и релета" />
+        <Translation textId="8" value="технически cхеми" />
+        <Translation textId="9" value="Technical Service Bulletin" />
+        <Translation textId="10" value="Съвети и поправки" />
+        <Translation textId="11" value="Home" />
+        <Translation textId="12" value="Електроника" />
+        <Translation textId="13" value="Нормативи За Ремонт" />
+      </Translations>
+    </Language>
+    <Language id="26">
+      <Translations/>
+    </Language>
+    <Language id="27">
+      <Translations/>
+    </Language>
+  </Languages>
+</TextDatabase>
