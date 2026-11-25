@@ -375,9 +375,10 @@ async function startServer() {
     });
   }
 
-  const PORT = 3000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`AutoLab Pro server listening on http://0.0.0.0:${PORT} (Direct Hardware Mode)`);
+  const PORT = Number(process.env.PORT ?? 3000);
+  const HOST = process.env.HOST ?? '127.0.0.1';
+  app.listen(PORT, HOST, () => {
+    console.log(`AutoLab Pro server listening on http://${HOST}:${PORT} (Local Desktop Mode)`);
   });
 }
 
