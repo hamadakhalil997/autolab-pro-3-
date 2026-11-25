@@ -1,0 +1,8 @@
+{
+  "name": "AutoLab Pro",
+  "description": "Advanced ECU Tuning, Multi-Bus Diagnostics & Global Vehicle Database (1980–2026)",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

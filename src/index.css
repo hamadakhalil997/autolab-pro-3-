@@ -1,0 +1,80 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html,
+  body {
+    font-family: var(--font-sans);
+    background-color: #020611;
+    color: #f1f5f9;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  button,
+  select,
+  input {
+    font-family: inherit;
+  }
+}
+
+.autolab-backdrop {
+  background:
+    radial-gradient(ellipse at 52% 16%, rgba(29, 118, 242, 0.34) 0%, transparent 52%),
+    radial-gradient(ellipse at 16% 84%, rgba(12, 82, 196, 0.24) 0%, transparent 48%),
+    radial-gradient(ellipse at 86% 78%, rgba(14, 165, 233, 0.16) 0%, transparent 45%),
+    linear-gradient(155deg, #020611 0%, #061329 52%, #020714 100%);
+}
+
+.autolab-grid-overlay {
+  background-image:
+    linear-gradient(rgba(56, 178, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 178, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.autolab-panel-frame {
+  background: linear-gradient(168deg, rgba(7, 20, 44, 0.9) 0%, rgba(3, 10, 24, 0.96) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  box-shadow:
+    0 0 22px rgba(14, 165, 233, 0.14),
+    0 14px 36px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(125, 211, 252, 0.18);
+}
+
+.autolab-glass-card {
+  background: linear-gradient(160deg, rgba(9, 24, 52, 0.92) 0%, rgba(4, 12, 28, 0.97) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.36);
+  box-shadow:
+    0 0 16px rgba(14, 165, 233, 0.1),
+    0 8px 22px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(125, 211, 252, 0.14);
+}
+
+.autolab-cyan-glow {
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.78));
+}
+
+.autolab-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.autolab-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.autolab-scroll::-webkit-scrollbar-thumb {
+  background: rgba(56, 152, 255, 0.35);
+  border-radius: 9999px;
+}
+
+.autolab-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 152, 255, 0.55);
+}

@@ -1,0 +1,928 @@
+AUTOLAB PRO - ACTUAL CONNECTION SOURCE EXTRACT
+==============================================
+Inspection date: 2026-11-24
+
+This is an extraction/map of the connection-related code currently present in
+the program files. Paths and line ranges identify the original files. The
+extract ends at the actual VCI connection boundary; ECU-session code is not
+present in the active path.
+
+VERIFIED FLOW
+-------------
+AutoLab Pro starts AutocomCdpBridge.exe
+ -> desktop client sends JSON over Named Pipe
+ -> bridge discovers the configured USB VCI
+ -> bridge connects the AUTOCOM CDP driver through VciDrivers SDK
+ -> desktop displays VCI status
+ -> adapter information can be read separately by the adapter-read UI
+
+The current startup code does NOT automatically read the serial number; it
+enumerates, connects, then requests status. Serial read is a separate UI action.
+No actual source line opens or verifies a vehicle ECU session.
+
+
+1. ACTIVE DESKTOP APP
+---------------------
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Desktop\MainWindow.xaml.cs
+
+L15-L20 — bridge executable path and client:
+
+    private static readonly string BridgePath =
+        Path.Combine(AppContext.BaseDirectory, "AutocomCdpBridge.exe");
+
+    private readonly AutocomBridgeClient _bridge = new();
+    private bool _vciConnected;
+    private bool _initializationStarted;
+    private bool _manualDisconnectRequested;
+
+L35-L46 — window load starts bridge/VCI initialization:
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_initializationStarted)
+            return;
+
+        _initializationStarted = true;
+        await InitializeAdapterAsync();
+    }
+
+L49-L90 — checks bridge status and waits for it:
+
+    private async Task<bool> IsBridgeAvailableAsync()
+    {
+        try
+        {
+            BridgeResponse response = await _bridge.GetStatusAsync();
+            SetBridgeStatus(response.Success);
+            if (response.Success)
+                BridgeMessageText.Text = response.Message ?? "Bridge is responding.";
+            return response.Success;
+        }
+        catch
+        {
+            SetBridgeStatus(false);
+            return false;
+        }
+    }
+
+    private void SetBridgeStatus(bool available)
+    {
+        SystemStatusText.Text = available ? "BRIDGE ONLINE" : "BRIDGE OFFLINE";
+        SystemStatusText.Foreground = available
+            ? Brushes.LightGreen
+            : Brushes.IndianRed;
+        ReadyStatusText.Text = available ? "Ready" : "Bridge Offline";
+        ReadyStatusDot.Fill = available ? Brushes.LightGreen : Brushes.Orange;
+        SidebarReadyStatusText.Text = ReadyStatusText.Text;
+        SidebarReadyStatusDot.Fill = ReadyStatusDot.Fill;
+        if (!available)
+            BridgeMessageText.Text = "The local Autocom bridge is not responding.";
+    }
+
+    private async Task<bool> WaitForBridgeAsync()
+    {
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            if (await IsBridgeAvailableAsync())
+                return true;
+
+            await Task.Delay(300);
+        }
+
+        return false;
+    }
+
+L92-L170 — exact active startup flow (bridge -> detect VCI -> connect VCI ->
+read VCI status):
+
+    private async Task InitializeAdapterAsync()
+    {
+        AddLog("Checking Autocom bridge...");
+        bool available = await IsBridgeAvailableAsync();
+
+        if (!available)
+        {
+            if (!File.Exists(BridgePath))
+            {
+                string message = "Bridge executable is missing beside the desktop application.";
+                BridgeMessageText.Text = message;
+                AddLog("ERROR: " + message);
+                return;
+            }
+
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = BridgePath,
+                    WorkingDirectory = AppContext.BaseDirectory,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process? process = Process.Start(startInfo);
+                process?.Dispose();
+                AddLog("Starting the local Autocom bridge...");
+            }
+            catch (Exception ex)
+            {
+                BridgeMessageText.Text = "Bridge could not start: " + ex.Message;
+                AddLog("ERROR: " + BridgeMessageText.Text);
+                return;
+            }
+        }
+        else
+        {
+            AddLog("Existing bridge detected.");
+        }
+
+        if (!await WaitForBridgeAsync())
+        {
+            string message = "Bridge did not become ready. Check the bridge log and named-pipe access.";
+            BridgeMessageText.Text = message;
+            AddLog("ERROR: " + message);
+            return;
+        }
+
+        AddLog("Bridge is ready.");
+        StartUiMonitor();
+
+        try
+        {
+            BridgeResponse detection = await _bridge.EnumerateAsync();
+            DeviceCountText.Text = detection.DeviceCount.ToString();
+
+            if (!IsTargetDevicePresent(detection))
+            {
+                AddLog(detection.Message ?? "No supported Autocom VCI was detected.");
+                UpdateConnectionDisplay(false, detection.PendingRxBytes);
+                return;
+            }
+
+            AddLog($"Autocom VCI detected: {detection.DeviceCount} device(s).");
+            BridgeResponse connection = await _bridge.ConnectAsync();
+            if (!connection.Success || !connection.Connected)
+            {
+                AddLog("VCI connection failed: " +
+                    (connection.Error ?? connection.Message ?? "Unknown error."));
+                UpdateConnectionDisplay(false, connection.PendingRxBytes);
+                return;
+            }
+
+            AddLog("Autocom VCI connected.");
+            BridgeResponse status = await _bridge.GetStatusAsync();
+            UpdateConnectionDisplay(status.Connected, status.PendingRxBytes);
+            BridgeMessageText.Text = status.Message ?? "VCI status retrieved.";
+        }
+        catch (Exception ex)
+        {
+            BridgeMessageText.Text = "VCI initialization failed: " + ex.Message;
+            AddLog("VCI initialization failed: " + ex.Message);
+        }
+    }
+
+L195-L280 — VCI USB monitoring and displayed VCI readiness:
+
+    private async Task MonitorUsbStateAsync(CancellationToken cancellationToken)
+    {
+        bool? previousConnected = null;
+        bool? previousDevicePresent = null;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                BridgeResponse detection =
+                    await _bridge.EnumerateAsync(cancellationToken);
+                bool devicePresent = IsTargetDevicePresent(detection);
+                bool connected = detection.Success && detection.Connected;
+                DeviceCountText.Text = detection.DeviceCount.ToString();
+
+                if (!devicePresent)
+                {
+                    if (previousDevicePresent == true)
+                        AddLog("Autocom VCI was removed.");
+
+                    _manualDisconnectRequested = false;
+                    connected = false;
+                }
+                else
+                {
+                    if (previousDevicePresent == false)
+                        AddLog("Autocom VCI was detected.");
+
+                    if (!connected && !_manualDisconnectRequested)
+                    {
+                        BridgeResponse reconnect =
+                            await _bridge.ConnectAsync(cancellationToken);
+                        connected = reconnect.Success && reconnect.Connected;
+                    }
+                }
+
+                UpdateConnectionDisplay(connected, detection.PendingRxBytes);
+                if (previousConnected.HasValue &&
+                    previousConnected.Value != connected)
+                {
+                    AddLog(connected
+                        ? "VCI connection restored."
+                        : "VCI connection lost.");
+                }
+
+                previousConnected = connected;
+                previousDevicePresent = devicePresent;
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                SetBridgeStatus(false);
+                if (previousConnected != false)
+                    AddLog("VCI monitor error: " + ex.Message);
+                previousConnected = false;
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private void UpdateConnectionDisplay(bool connected, uint pendingBytes)
+    {
+        _vciConnected = connected;
+        VciHeaderStatus.Text = connected ? "VCI CONNECTED" : "VCI NOT CONNECTED";
+        VciStatusDot.Fill = connected ? Brushes.LightGreen : Brushes.Orange;
+        ConnectVciButton.IsEnabled = !connected;
+        DisconnectVciButton.IsEnabled = connected;
+        ReadAdapterButton.IsEnabled = connected;
+        QueueStatusText.Text = $"Pending RX bytes: {pendingBytes}";
+        ReadyStatusText.Text = connected ? "Ready" : "VCI Not Connected";
+        ReadyStatusDot.Fill = connected ? Brushes.LightGreen : Brushes.Orange;
+        SidebarReadyStatusText.Text = ReadyStatusText.Text;
+        SidebarReadyStatusDot.Fill = ReadyStatusDot.Fill;
+    }
+
+L316-L368 — manual VCI detection and CONNECT button result handling:
+
+    private async void DetectDevice_Click(object sender, RoutedEventArgs e)
+    {
+        await ExecuteCommandAsync(() => _bridge.EnumerateAsync(), "VCI detection");
+    }
+
+    private async void ConnectDevice_Click(object sender, RoutedEventArgs e)
+    {
+        _manualDisconnectRequested = false;
+        AddLog("VCI/ECU connection requested.");
+        try
+        {
+            BridgeResponse response = await _bridge.ConnectAsync();
+            DeviceCountText.Text = response.DeviceCount.ToString();
+
+            if (!response.Success || !response.Connected)
+            {
+                UpdateConnectionDisplay(false, response.PendingRxBytes);
+                if (response.ErrorCode == "VCI_NOT_FOUND")
+                {
+                    EcuStatusText.Text = "NO VCI DETECTED";
+                    EcuSessionMessageText.Text =
+                        "No Autocom VCI was detected. Check its USB cable. No vehicle ECU can be reached.";
+                    BridgeMessageText.Text = "No Autocom VCI adapter detected.";
+                }
+                else
+                {
+                    EcuStatusText.Text = "NO ECU SESSION";
+                    EcuSessionMessageText.Text =
+                        "VCI connection failed; vehicle ECU connection was not attempted.";
+                    BridgeMessageText.Text =
+                        response.Error ?? response.Message ?? "VCI connection failed.";
+                }
+
+                AddLog("VCI/ECU connection failed: " +
+                    (response.Error ?? response.Message ?? "No VCI/ECU connection."));
+                return;
+            }
+
+            UpdateConnectionDisplay(true, response.PendingRxBytes);
+            BridgeMessageText.Text =
+                "VCI connected. No ECU session is active; check the vehicle OBD cable and ignition.";
+            AddLog("VCI connected; no ECU session is active or verified.");
+        }
+        catch (Exception ex)
+        {
+            UpdateConnectionDisplay(false, 0);
+            EcuSessionMessageText.Text =
+                "Connection request failed. Check the bridge, VCI USB cable, and vehicle OBD connection.";
+            BridgeMessageText.Text = "VCI/ECU connection failed: " + ex.Message;
+            AddLog("VCI/ECU connection failed: " + ex.Message);
+        }
+    }
+
+L463-L501 — adapter info read is a separate UI operation:
+
+    private async void ReadAdapterInformation_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vciConnected)
+        {
+            AdapterInfoResult.Text = "Connect the Autocom VCI before reading adapter information.";
+            AddLog("Adapter read blocked: VCI is not connected.");
+            return;
+        }
+
+        if (ReadOperationCombo.SelectedItem is not ComboBoxItem item ||
+            item.Tag is not string operation)
+        {
+            AdapterInfoResult.Text = "Choose a supported adapter read operation.";
+            return;
+        }
+
+        AdapterInfoResult.Text = "Reading from the Autocom VCI...";
+        try
+        {
+            BridgeResponse response = await _bridge.ReadAdapterAsync(operation);
+            if (!response.Success)
+            {
+                AdapterInfoResult.Text =
+                    response.Error ?? response.Message ?? "Adapter read failed.";
+                AddLog("Adapter read failed: " + AdapterInfoResult.Text);
+                return;
+            }
+
+            AdapterInfoResult.Text = string.IsNullOrWhiteSpace(response.Value)
+                ? "The adapter returned no value."
+                : response.Value;
+            AddLog("Adapter read completed: " + operation);
+        }
+        catch (Exception ex)
+        {
+            AdapterInfoResult.Text = ex.Message;
+            AddLog("Adapter read error: " + ex.Message);
+        }
+    }
+
+L415-L427 — unsupported ECU feature handler:
+
+        UnavailableFeatureTitleText.Text = feature;
+        UnavailableFeatureMessageText.Text =
+            $"{feature} is not available: no verified vendor-supported ECU session API is integrated. No ECU command was sent.";
+        ShowPanel(UnavailablePanel, button);
+
+
+2. DESKTOP NAMED-PIPE CLIENT
+----------------------------
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Infrastructure\AutocomBridgeClient.cs
+
+L9-L76 — commands and strict adapter operation allow-list:
+
+public sealed class AutocomBridgeClient : IAsyncDisposable
+{
+    private const string PipeName = "AutoLabPro.AutocomCDP.v1";
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+    private readonly SemaphoreSlim _requestLock = new(1, 1);
+    private bool _disposed;
+
+    public async Task<BridgeResponse> EnumerateAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await SendCommandAsync("enumerate", cancellationToken);
+    }
+
+    public async Task<BridgeResponse> ConnectAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await SendCommandAsync("connect", cancellationToken);
+    }
+
+    public async Task<BridgeResponse> GetStatusAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await SendCommandAsync("status", cancellationToken);
+    }
+
+    public async Task<BridgeResponse> DisconnectAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await SendCommandAsync("disconnect", cancellationToken);
+    }
+
+    public Task<BridgeResponse> ReadAdapterAsync(
+        string operation,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedOperation = operation?.Trim().ToLowerInvariant() ?? "";
+        if (normalizedOperation is not (
+            "serial" or
+            "obd_firmware" or
+            "eobd_firmware" or
+            "platform" or
+            "communication_status"))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(operation),
+                "The requested adapter read operation is not supported.");
+        }
+
+        string request =
+            "{\"command\":\"read_adapter\",\"operation\":\"" +
+            normalizedOperation +
+            "\"}";
+
+        return SendRequestAsync(request, cancellationToken);
+    }
+
+L78-L162 — complete request transport over NamedPipeClientStream:
+
+    private Task<BridgeResponse> SendCommandAsync(
+        string command,
+        CancellationToken cancellationToken)
+    {
+        return SendRequestAsync(
+            "{\"command\":\"" + command + "\"}",
+            cancellationToken);
+    }
+
+    private async Task<BridgeResponse> SendRequestAsync(
+        string request,
+        CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        await _requestLock.WaitAsync(cancellationToken);
+        try
+        {
+            using var timeoutSource =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutSource.CancelAfter(Timeout);
+
+            using var pipe = new NamedPipeClientStream(
+                ".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            await pipe.ConnectAsync(timeoutSource.Token);
+
+            using var writer = new StreamWriter(
+                pipe, new UTF8Encoding(false), 1024, leaveOpen: true)
+            {
+                AutoFlush = true
+            };
+            using var reader = new StreamReader(
+                pipe, Encoding.UTF8, false, 1024, leaveOpen: true);
+
+            await writer.WriteLineAsync(request.AsMemory(), timeoutSource.Token);
+            string? response = await reader.ReadLineAsync(timeoutSource.Token);
+            if (string.IsNullOrWhiteSpace(response))
+                throw new IOException("Autocom Bridge returned an empty response.");
+
+            return JsonSerializer.Deserialize<BridgeResponse>(response, JsonOptions)
+                ?? throw new IOException("Unable to decode Autocom Bridge response.");
+        }
+        finally
+        {
+            _requestLock.Release();
+        }
+    }
+
+L164-L191 — response contract:
+BridgeRequest has Command. BridgeResponse has Success, Connected, FtStatus,
+DeviceCount, PendingRxBytes, Message, Error, ErrorCode, Operation, Value,
+SupportedOperations, and DisabledOperations.
+
+
+3. ACTIVE AUTOCOM CDP BRIDGE
+----------------------------
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder (2)\AutocomCdpBridge\Program.cs
+
+L20-L27 — pipe, configured VCI USB/FTDI serial filter, SDK folder, and state:
+
+    private const string PipeName = "AutoLabPro.AutocomCDP.v1";
+    private const string SerialNumber = "FTXO5VO2";
+    private const string VendorPath = @"C:\Program Files (x86)\Autocom 2021.11 Software";
+    private const int MaxRequestBytes = 32 * 1024;
+    private static readonly object StateLock = new object();
+    private static IVciDriver _driver;
+
+L29-L55 — bridge startup, x86 guard, pipe-server launch, and disconnect on exit.
+L121-L141 — vendor assembly/native DLL resolution.
+L143-L230 — named-pipe server, request framing, and JSON response writing.
+L232-L315 — JSON validation and command dispatch.
+
+The dispatch cases at L280-L295 are:
+  status       -> GetStatus
+  capabilities -> GetCapabilities
+  enumerate    -> EnumerateDevices
+  connect      -> ConnectVci(request)
+  disconnect   -> DisconnectVci
+  read_adapter -> ReadAdapter(request)
+  exit         -> disconnect and stop bridge
+
+L317-L326 — actual SDK device discovery:
+
+    private static List<VciDrivers.VciLink.VciLinkDeviceInfo> GetCdpDevices()
+    {
+        return DeviceList.GetVciLinkDevices()
+            .Where(d =>
+                d.FtdiSerial != null &&
+                d.FtdiSerial.IndexOf(SerialNumber, StringComparison.OrdinalIgnoreCase) >= 0 &&
+                d.ConnectionType != null &&
+                d.ConnectionType.IndexOf("USB", StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+    }
+
+L328-L354 — EnumerateDevices returns detected device count and VCI status.
+
+L413-L486 — ConnectVci:
+  - locks shared driver state;
+  - enumerates supported USB devices;
+  - validates optional device_index;
+  - creates VciDriverConfiguration for DriverFamily.Cdp and
+    ConnectionMethod.DeviceDescription;
+  - calls DriverLibrary.CreateDrivers(config);
+  - calls candidate.Connect();
+  - requires result.Succeeded and candidate.IsConnected;
+  - stores the connected IVciDriver.
+
+Exact SDK connection calls from that method:
+
+    var config = new VciDriverConfiguration(
+        DriverFamily.Cdp,
+        new[] { ConnectionMethod.DeviceDescription });
+    config.DeviceDescription = target.Description;
+
+    var library = new DriverLibrary();
+    IVciDriver candidate = library.CreateDrivers(config).FirstOrDefault();
+    Result result = candidate.Connect();
+    if (!result.Succeeded || !candidate.IsConnected)
+        return Failure("VCI_CONNECT_FAILED", ...);
+    _driver = candidate;
+
+L488-L516 — DisconnectVci calls IVciDriver.Disconnect().
+
+L518-L590 — ReadAdapter validates an active VCI, maps the requested adapter
+operation to a supported VciCommand, and calls SendVciCommand.
+Supported mappings:
+  serial                -> VciCommand.ReadSerial
+  obd_firmware          -> VciCommand.ObdFirmVersion
+  eobd_firmware         -> VciCommand.EobdFirmVersion
+  platform              -> VciCommand.ReadPlatformName
+  communication_status  -> VciCommand.CheckCommunicationStatus
+
+Actual SDK read call at L556:
+
+    var result = _driver.SendVciCommand(command);
+
+L592-L674 — IsConnected, GetStatus, Failure, and BridgeResponse helpers report
+the VCI state. They do not create an ECU session or report ECU connectivity.
+
+
+4. PROJECT AND INSTALLER FILES
+------------------------------
+BRIDGE PROJECT:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder (2)\AutocomCdpBridge\AutocomCdpBridge.csproj
+
+L1-L14: executable targets .NET Framework 4.8 and x86.
+L19-L42: SDK DLL references from
+C:\Program Files (x86)\Autocom 2021.11 Software
+(VciDrivers, VCILinkNET, FTD2XX_NET, VCICrypto, ExtendiaUsbLib, wcl).
+L45: Newtonsoft.Json 13.0.3.
+
+DESKTOP PROJECT:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Desktop\UniversalECU.Desktop.csproj
+
+L1-L17: WPF app targets net10.0-windows, win-x64, self-contained, and references
+UniversalECU.Infrastructure. MainWindow expects AutocomCdpBridge.exe beside
+the application executable.
+
+INSTALLER:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder (2)\installer.iss
+
+L3: publish folder path.
+L21-L22: recursively copies publish folder contents into the installation.
+L25-L32: creates AutoLab Pro/bridge shortcuts and starts bridge validation.
+
+
+5. ECU UI EVIDENCE
+------------------
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Desktop\MainWindow.xaml
+
+L240-L243: UI says "No ECU session" and "ECU readings unavailable".
+L262, L278, L297, L306: RPM, speed, engine load, and coolant values say no ECU
+session / unavailable.
+L335: live ECU graphs are disabled until a vehicle session is supported.
+Those are the XAML's initial/default texts; MainWindow.xaml.cs now changes the
+ECU status to WAITING FOR ECU when the VCI connects, without claiming ECU
+communication.
+
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Desktop\MainWindow.xaml.cs
+
+L415-L427: unsupported feature handler says no verified vendor-supported ECU
+session API is integrated and that no ECU command was sent.
+
+
+6. SEPARATE HOSTS — NOT THE ACTIVE AUTOCOM CDP PIPE
+---------------------------------------------------
+A) AutocomHost
+
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.AutocomHost\Program.cs
+
+L12: uses a different pipe, UniversalECU.AutocomCDP.
+L29-L35: states official VCI SDK and Windows PnP discovery, and explicitly
+prints "Vehicle diagnostic commands: DISABLED".
+L104 onward: its own pipe server; L144 onward dispatches enumerate/connect/
+status/disconnect. The active MainWindow instead uses
+AutoLabPro.AutocomCDP.v1 through AutocomBridgeClient.
+
+B) J2534Host
+
+FILE:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.J2534Host\Program.cs
+
+L11: pipe UniversalECU.J2534Host.
+L15-L19: prints "State: READY - NO DEVICE CONNECTION".
+L71-L101: handles status and exit only; all other commands return
+"Command is not implemented."
+
+CLIENT:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Infrastructure\J2534\J2534HostClient.cs
+
+L25-L90 starts that host and connects its pipe; L92-L103 asks for host status.
+It contains no J2534 device-connect or ECU-session call.
+
+BOUNDARY:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Infrastructure\J2534\J2534AdapterBoundary.cs
+
+L3-L5 explicitly describes an integration boundary. L11-L22 only validates
+and records a vendor DLL path; API binding still requires vendor documentation.
+It does not connect to a vehicle or ECU.
+
+
+7. EXACT STOP POINT
+-------------------
+Current working path:
+  VCI discovered -> VCI connected -> adapter information may be read.
+
+Current ECU path:
+  absent. The code does not perform ECU discovery, open an ECU session, or
+  verify a response from the car control unit. The observed serial 100251 is
+  the VCI adapter serial, not proof of ECU connection.
+
+MainWindow.xaml.cs now displays WAITING FOR ECU after VCI connection. This is
+only a UI state: its accompanying message says ECU connection has not been
+detected or verified. The actual ECU session path remains absent.
+
+Added in:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Desktop\MainWindow.xaml.cs
+Method: UpdateConnectionDisplay, immediately after the bridge/VCI status labels.
+
+    EcuStatusText.Text = connected ? "WAITING FOR ECU" : "No ECU session";
+    EcuSessionMessageText.Text = connected
+        ? "VCI connected. ECU connection has not been detected or verified."
+        : "ECU readings are unavailable because no VCI/ECU session is active.";
+    VehicleStateDot.Fill = Brushes.Orange;
+
+
+8. VERBATIM CLIENT PIPE IMPLEMENTATION
+--------------------------------------
+Original file:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder\UniversalECU_V1_Starter\UniversalECU_V1\src\UniversalECU.Infrastructure\AutocomBridgeClient.cs
+Original line range: L1-L191.
+
+The full source is in that file. The exact pipe transport (L87-L150) is:
+
+    private async Task<BridgeResponse> SendRequestAsync(
+        string request,
+        CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        await _requestLock.WaitAsync(cancellationToken);
+
+        try
+        {
+            using var timeoutSource =
+                CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken);
+
+            timeoutSource.CancelAfter(Timeout);
+
+            using var pipe = new NamedPipeClientStream(
+                ".",
+                PipeName,
+                PipeDirection.InOut,
+                PipeOptions.Asynchronous);
+
+            await pipe.ConnectAsync(timeoutSource.Token);
+
+            using var writer = new StreamWriter(
+                pipe,
+                new UTF8Encoding(false),
+                1024,
+                leaveOpen: true)
+            {
+                AutoFlush = true
+            };
+
+            using var reader = new StreamReader(
+                pipe,
+                Encoding.UTF8,
+                false,
+                1024,
+                leaveOpen: true);
+
+            await writer.WriteLineAsync(
+                request.AsMemory(),
+                timeoutSource.Token);
+
+            string? response = await reader.ReadLineAsync(
+                timeoutSource.Token);
+
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                throw new IOException(
+                    "Autocom Bridge returned an empty response.");
+            }
+
+            return JsonSerializer.Deserialize<BridgeResponse>(
+                response,
+                JsonOptions)
+                ?? throw new IOException(
+                    "Unable to decode Autocom Bridge response.");
+        }
+        finally
+        {
+            _requestLock.Release();
+        }
+    }
+
+
+9. VERBATIM SDK CONNECTION AND ADAPTER READ
+-------------------------------------------
+Original file:
+C:\Users\hamadakhalil\Desktop\خاص بالسيارات\New folder (2)\AutocomCdpBridge\Program.cs
+
+ConnectVci is L413-L486. Exact SDK connection method:
+
+    private static BridgeResponse ConnectVci(JObject request)
+    {
+        lock (StateLock)
+        {
+            try
+            {
+                if (IsConnected())
+                    return GetStatus("VCI is already connected.");
+
+                var devices = GetCdpDevices();
+                if (devices.Count == 0)
+                    return Failure("VCI_NOT_FOUND", "No supported USB VCI device was found.");
+
+                uint? requestedIndex = null;
+                if (request["device_index"] != null)
+                {
+                    JToken indexToken = request["device_index"];
+                    if (indexToken.Type != JTokenType.Integer)
+                        return Failure("INVALID_REQUEST", "device_index must be an integer.");
+
+                    long indexValue = (long)indexToken;
+                    if (indexValue < 0 || indexValue > uint.MaxValue)
+                        return Failure("INVALID_REQUEST", "device_index is outside the valid range.");
+
+                    requestedIndex = (uint)indexValue;
+                }
+
+                var target = requestedIndex.HasValue
+                    ? devices.FirstOrDefault(d => d.Index == requestedIndex.Value)
+                    : devices.FirstOrDefault();
+
+                if (target == null)
+                    return Failure("VCI_NOT_FOUND", "The requested VCI device index was not found.");
+
+                var config = new VciDriverConfiguration(
+                    DriverFamily.Cdp,
+                    new[] { ConnectionMethod.DeviceDescription });
+                config.DeviceDescription = target.Description;
+
+                DriverLibrary.SetLogger(message =>
+                    Log("sdk", new { message = message.Length > 1000 ? message.Substring(0, 1000) : message }));
+
+                var library = new DriverLibrary();
+                IVciDriver candidate = library.CreateDrivers(config).FirstOrDefault();
+                if (candidate == null)
+                    return Failure("DRIVER_NOT_CREATED", "The SDK did not create a CDP driver.");
+
+                Result result = candidate.Connect();
+                if (!result.Succeeded)
+                {
+                    candidate.Disconnect();
+                    string sdkMessage = result.Error == null ? "SDK connection failed." : result.Error.ErrorMessage;
+                    Log("connect_failed", new { error = sdkMessage });
+                    return Failure("VCI_CONNECT_FAILED", sdkMessage);
+                }
+
+                if (!candidate.IsConnected)
+                {
+                    candidate.Disconnect();
+                    return Failure("VCI_CONNECT_FAILED", "The SDK reported success but the driver is not connected.");
+                }
+
+                _driver = candidate;
+                Log("vcI_connected", new { index = target.Index });
+                return GetStatus("Official Autocom VCI connection established.");
+            }
+            catch (Exception ex)
+            {
+                _driver = null;
+                Log("connect_error", new { error = ex.GetType().Name, message = ex.Message });
+                return Failure("INTERNAL_ERROR", "VCI connection failed.");
+            }
+        }
+    }
+
+ReadAdapter is L518-L590. The actual serial branch and SDK call are:
+
+    private static BridgeResponse ReadAdapter(JObject request)
+    {
+        lock (StateLock)
+        {
+            if (!IsConnected())
+                return Failure("VCI_NOT_CONNECTED", "Connect to the VCI before reading adapter information.");
+
+            JToken operationToken = request["operation"];
+            if (operationToken == null || operationToken.Type != JTokenType.String)
+                return Failure("INVALID_REQUEST", "A string operation property is required.");
+
+            string operation = ((string)operationToken).Trim().ToLowerInvariant();
+            VciCommand command;
+
+            switch (operation)
+            {
+                case "serial":
+                    command = VciCommand.ReadSerial;
+                    break;
+                case "obd_firmware":
+                    command = VciCommand.ObdFirmVersion;
+                    break;
+                case "eobd_firmware":
+                    command = VciCommand.EobdFirmVersion;
+                    break;
+                case "platform":
+                    command = VciCommand.ReadPlatformName;
+                    break;
+                case "communication_status":
+                    command = VciCommand.CheckCommunicationStatus;
+                    break;
+                default:
+                    return Failure("INVALID_OPERATION",
+                        "Allowed operations are serial, obd_firmware, eobd_firmware, platform, and communication_status.");
+            }
+
+            try
+            {
+                var result = _driver.SendVciCommand(command);
+                if (!result.Succeeded || result.Value == null)
+                {
+                    string sdkMessage = result.Error == null ? "The SDK read operation failed." : result.Error.ErrorMessage;
+                    Log("adapter_read_failed", new { operation, error = sdkMessage });
+                    return Failure("ADAPTER_READ_FAILED", sdkMessage);
+                }
+
+                string responseValue = result.Value.Response;
+                if (string.IsNullOrWhiteSpace(responseValue))
+                    responseValue = result.Value.RawResponse;
+
+                Log("adapter_read", new { operation, succeeded = true });
+
+                return new BridgeResponse
+                {
+                    Success = true,
+                    Connected = true,
+                    FtStatus = "VCI_CONNECTED",
+                    DeviceCount = 1,
+                    PendingRxBytes = (int)Math.Min(_driver.NumberOfBytesToRead(), int.MaxValue),
+                    Message = "Adapter read completed.",
+                    Error = null,
+                    ErrorCode = null,
+                    Operation = operation,
+                    Value = responseValue
+                };
+            }
+            catch (Exception ex)
+            {
+                Log("adapter_read_error", new { operation, error = ex.GetType().Name });
+                return Failure("ADAPTER_READ_FAILED", "The adapter read operation failed.");
+            }
+        }
+    }
+
+These are actual source extracts, not new ECU-connect code. The app does not
+call an ECU session API after these methods return.
