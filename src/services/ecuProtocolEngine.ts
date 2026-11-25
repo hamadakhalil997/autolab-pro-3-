@@ -142,7 +142,7 @@ export function decodeRawUdsReply(txPayload: string, rawReply: string): { ok: bo
   if (cleanRx.includes(posSid)) {
     return { ok: true, note: `Positive ECU Response (SID 0x${posSid})` };
   }
-  return { ok: true, note: 'Raw ECU Response Received' };
+  return { ok: false, note: `Unverified ECU response: expected positive SID 0x${posSid}` };
 }
 
 export async function dispatchUdsCommand(params: {
