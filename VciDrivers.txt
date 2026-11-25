@@ -1,0 +1,30 @@
+
+// C:\Program Files (x86)\Autocom 2021.11 Software\VciDrivers.dll
+// VciDrivers, Version=1.0.0.56, Culture=neutral, PublicKeyToken=null
+// Global type: <Module>
+// Architecture: x86
+// Runtime: v4.0.30319
+// This assembly was compiled using the /deterministic option.
+// Hash algorithm: SHA1
+
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+
+[assembly: CompilationRelaxations(8)]
+[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]
+[assembly: Debuggable(/*Could not decode attribute arguments.*/)]
+[assembly: AssemblyTitle("VciDrivers")]
+[assembly: AssemblyDescription("Driver implementations for VCI")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("Autocom Diagnostic Partner AB")]
+[assembly: AssemblyProduct("VciDrivers")]
+[assembly: AssemblyCopyright("Copyright ©  2020")]
+[assembly: AssemblyTrademark("")]
+[assembly: ComVisible(false)]
+[assembly: Guid("70bdf6eb-b380-465e-9501-497bef0ea5f4")]
+[assembly: AssemblyFileVersion("1.0.0.56")]
+[assembly: TargetFramework(".NETFramework,Version=v4.5.1", FrameworkDisplayName = ".NET Framework 4.5.1")]
+[assembly: AssemblyVersion("1.0.0.56")]
