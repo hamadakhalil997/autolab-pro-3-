@@ -20,7 +20,7 @@ namespace UniversalECU.AutocomBridge
     internal static class Program
     {
         private const string PipeName = "UniversalECU.AutocomCDP";
-        private const string SerialNumber = "FTXO5VO2";
+        private const string SerialNumber = "100251";
         private const string VendorPath = @"C:\Program Files (x86)\Autocom 2021.11 Software";
 
         private static readonly object StateLock = new object();
